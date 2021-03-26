@@ -27,7 +27,7 @@
 
 
 // ===== Device Information Service =====
-#define SOFTWARE_INFO "v2.2"
+#define SOFTWARE_INFO "v1.6"
 #define MANU_INFO     "FREXIT"
 // ======================================
 
@@ -102,10 +102,10 @@ const BLE_CHAR AttCharList[] = {
   {TYPE_CHAR, 0x000e, {ATT_CHAR_PROP_RD, 0x0f, 0, 0x28, 0x2a}, UUID16_FORMAT}, //sw version
 
   // ===== Item Service Characteristics =====
-  {TYPE_CHAR, 0x10, {ATT_CHAR_PROP_RD | ATT_CHAR_PROP_W | ATT_CHAR_PROP_W_NORSP | ATT_CHAR_PROP_NTF, 0x11, 0, 0 },1}, // Characteristic
-  {TYPE_CFG,  0x12, {ATT_CHAR_PROP_RD|ATT_CHAR_PROP_W}},                                           // Client Characteristic Configuration
-  {TYPE_INFO, 0x13},                                                                              // Characteristic User Description
-  {TYPE_PRESENTATION_FORMAT, 0x14},   
+  {TYPE_CHAR, 0x11, {ATT_CHAR_PROP_RD | ATT_CHAR_PROP_W | ATT_CHAR_PROP_W_NORSP , 0x12, 0, 0, 0 },1}, // Characteristic
+  {TYPE_CFG,  0x13, {ATT_CHAR_PROP_RD|ATT_CHAR_PROP_W}},                                           // Client Characteristic Configuration
+  {TYPE_INFO, 0x14},                                                                              // Characteristic User Description
+  {TYPE_PRESENTATION_FORMAT, 0x15},   
 };
 
 // List of 128-bit UUIDs
@@ -143,7 +143,7 @@ void att_server_rdByGrType( uint8_t pdu_type, uint8_t attOpcode, uint16_t st_hd,
   // Item Service (start handle 0x20 (??) )
   else if ((att_type == GATT_PRIMARY_SERVICE_UUID) && (st_hd <= 0x10))
   {
-    att_server_rdByGrTypeRspPrimaryService(pdu_type, 0x10, 0x14, (uint8_t*)(AttUuid128List[0].uuid128), 16);
+    att_server_rdByGrTypeRspPrimaryService(pdu_type, 0x10, 0x19, (uint8_t*)(AttUuid128List[0].uuid128), 16);
     return;
   }
 
@@ -160,13 +160,13 @@ void ser_write_rsp(uint8_t pdu_type/*reserved*/, uint8_t attOpcode/*reserved*/,
 {
   switch (att_hd)
   {
-    case 0x11:
+    case 0x12:
       // copy the first byte of written data into the item characteristic value
       memcpy(&itemCharacteristicValue, attValue, 1);
       bItemCharacteristicValueChanged = true;
       ser_write_rsp_pkt(pdu_type);  /*if the related character has the property of WRITE(with response) or TYPE_CFG, one MUST invoke this func*/
       break;
-    case 0x12:
+    case 0x13:
       // write to the Client Characteristic Configuration Descriptor
       memcpy(&cccd, attValue, 2);
       ser_write_rsp_pkt(pdu_type);
@@ -203,21 +203,21 @@ void server_rd_rsp(uint8_t attOpcode, uint16_t attHandle, uint8_t pdu_type)
       att_server_rd(pdu_type, attOpcode, attHandle, (uint8_t*)(SOFTWARE_INFO), sizeof(SOFTWARE_INFO) - 1);
       break;
 
-    case 0x11:  // Item Characteristic Value
+    case 0x12:  // Item Characteristic Value
       att_server_rd(pdu_type, attOpcode, attHandle, &itemCharacteristicValue, 1);
       break;
 
-    case 0x12:  // Item Client Characteristic Configuration
+    case 0x13:  // Item Client Characteristic Configuration
       {
         att_server_rd(pdu_type, attOpcode, attHandle, cccd, 2);
       }
       break;
 
-    case 0x13:  // Item Characteristic User Description
+    case 0x14:  // Item Characteristic User Description
       att_server_rd(pdu_type, attOpcode, attHandle, (uint8_t*) itemCharacteristicUserDescription, sizeof(itemCharacteristicUserDescription));
       break;
       
-    case 0x14: // Item Characteristic Presentation Format
+    case 0x15: // Item Characteristic Presentation Format
       att_server_rd(pdu_type, attOpcode, attHandle, (uint8_t*)itemCharacteristicPresentationFormat, sizeof(itemCharacteristicPresentationFormat));
       break;
 
